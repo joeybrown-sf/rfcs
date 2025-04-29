@@ -27,7 +27,7 @@ the registry are published to ArtifactHub.io, and it will pull data only from Ar
 
 This RFC proposes to shut down the buildpacks registry index completely in 18 months. This gives time for modifications
 to `pack` to read from ArtifactHub.io and for `pack` users to upgrade their `pack` version. After this time, `pack` will
-read only from the ArtifactHub.io API.
+read only from the [ArtifactHub.io API](https://artifacthub.io/docs/api/#/Repositories/searchRepositories).
 
 # Definitions
 
