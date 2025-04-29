@@ -91,11 +91,11 @@ of this phase-out can be found in the [migration](#migration) section of this do
 
 Component buildpacks and builders will be created as new types in Artifact Hub.
 
-Because anyone can publish anything to ArtifactHub.io, CNB registry operators can facilitate this transition. CNB can
-publish all the buildpack artifacts currently indexed (and future ones) to ArtifactHub.io under a CNB Artifact Hub
-organization. Publishers can then claim ownership of these artifacts and take over responsibility for publishing can do
-so
-by [claiming ownership](https://artifacthub.io/docs/topics/repositories/#ownership-claim).
+Because anyone can publish anything to ArtifactHub.io, the
+CNB [Platform Team](https://github.com/buildpacks/community/blob/main/TEAMS.md#Platform-Team) can facilitate this
+transition. CNB can publish all the buildpack artifacts currently indexed (and future ones) to ArtifactHub.io under a
+CNB Artifact Huborganization. Publishers can then claim ownership of these artifacts and take over responsibility for
+publishing can do so by [claiming ownership](https://artifacthub.io/docs/topics/repositories/#ownership-claim).
 
 Buildpack publishers will be able to continue publishing to the buildpack registry index for a period of time, but they
 will likely want to publish to ArtifactHub.io instead. Eventually, buildpack publishers will not be able to publish to
@@ -329,6 +329,8 @@ There are
 many [repository types supported by Artifact Hub](https://github.com/artifacthub/hub/blob/master/docs/repositories.md).
 
 # Spec. Changes
+
 [spec-changes]: #spec-changes
 
-Substantial changes to [buildpack-registry](https://github.com/buildpacks/spec/blob/main/extensions/buildpack-registry.md).
+Substantial changes
+to [buildpack-registry](https://github.com/buildpacks/spec/blob/main/extensions/buildpack-registry.md).
