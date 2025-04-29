@@ -286,7 +286,10 @@ buildpacks.
 
 [drawbacks]: #drawbacks
 
-This is a disruptive change for buildpack publishers and `pack` users.
+This is a disruptive change for buildpack publishers. The ownership and publishing model will be different.
+
+This is a destructive change that will affect `pack`. Any versions of `pack` that depend on the buildpack registry will
+break as the various requirements of this RFC are implemented.
 
 ArtifactHub.io will be on the hot path for some `pack` operations.
 
