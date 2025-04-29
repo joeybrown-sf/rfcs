@@ -296,8 +296,8 @@ If ArtifactHub.io goes away in the future, CNB will have to adapt. CNB discovera
 lurch.
 
 Between Requirements 3 and 4, the CNB artifact types will exist in ArtifactHub.io, but any packages published directly
-to ArtifactHub.io will not be indexed by the buildpack registry. This could cause confusion among developers and users
-if communication about the migration is not effective.
+to ArtifactHub.io will not be indexed by the buildpack registry. This could cause confusion among buildpack publishers
+and `pack` users if communication about the migration is not effective.
 
 # Alternatives
 
