@@ -16,12 +16,12 @@
 [summary]: #summary
 
 This RFC proposes that the Buildpacks project integrates and augments the
-bespoke [registry service](https://registry.buildpacks.io/) with [ArtifactHub.io](https://artifacthub.io/).
+bespoke [registry service](https://registry.buildpacks.io/) with [ArtifactHub.io](https://artifacthub.io/) and
+eventually deprecates the buildpack registry.
 
 This RFC proposes that in 12 months, the buildpacks registry index becomes read-only. Buildpack publishers
 will have 12 months to change their publish process so that buildpacks are no longer published to the registry index,
-and
-instead buildpacks are published to ArtifactHub.io. During this time, buildpack publishers may publish to either the
+and instead buildpacks are published to ArtifactHub.io. During this time, buildpack publishers may publish to either the
 buildpack registry or ArtifactHub.io. The buildpack registry will be updated such that current (and new) buildpacks in
 the registry are published to ArtifactHub.io, and it will pull data only from ArtifactHub.io.
 
@@ -325,8 +325,8 @@ there would be no necessary changes to `pack`.
 [prior-art]: #prior-art
 
 Helm went through this process in 2020 when
-it [replaced its registry service, Helm Hub](https://helm.sh/blog/helm-hub-moving-to-artifact-hub/). At the time, there
-were some Helm specific changes to Artifact Hub. We would be using a generic integration approach.
+it [replaced its registry service, Helm Hub](https://helm.sh/blog/helm-hub-moving-to-artifact-hub/). Here is Helm
+Hub's [deprecation timeline](https://github.com/helm/charts#deprecation-timeline).
 
 There are
 many [repository types supported by Artifact Hub](https://github.com/artifacthub/hub/blob/master/docs/repositories.md).
