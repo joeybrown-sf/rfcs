@@ -327,3 +327,8 @@ were some Helm specific changes to Artifact Hub. We would be using a generic int
 
 There are
 many [repository types supported by Artifact Hub](https://github.com/artifacthub/hub/blob/master/docs/repositories.md).
+
+# Spec. Changes
+[spec-changes]: #spec-changes
+
+Substantial changes to [buildpack-registry](https://github.com/buildpacks/spec/blob/main/extensions/buildpack-registry.md).
