@@ -19,8 +19,8 @@ This RFC proposes that the Buildpacks project integrates and augments the
 bespoke [registry service](https://registry.buildpacks.io/) with [ArtifactHub.io](https://artifacthub.io/) and
 eventually deprecates the buildpack registry.
 
-This RFC proposes that in 12 months, the buildpacks registry index becomes read-only. Buildpack publishers
-will have 12 months to change their publish process so that buildpacks are no longer published to the registry index,
+This RFC proposes that in 6 months, the buildpacks registry index becomes read-only. Buildpack publishers
+will have 6 months to change their publish process so that buildpacks are no longer published to the registry index,
 and instead buildpacks are published to ArtifactHub.io. During this time, buildpack publishers may publish to either the
 buildpack registry or ArtifactHub.io. The buildpack registry will be updated such that current (and new) buildpacks in
 the registry are published to ArtifactHub.io, and it will pull data only from ArtifactHub.io.
@@ -83,9 +83,14 @@ discussion can be found [here](https://github.com/artifacthub/hub/issues/4352).
 ### Integrate CNB services and tools to use ArtifactHub.io as the official CNB registry
 
 This should happen in phases so that buildpack authors and `pack` users have minimal disruption to established
-workflows. CNB is committed to backwards compatibility, but there are sometimes good reasons to break this backwards
-compatibility. This RFC proposes a slow phase-out and eventual decommission of the buildpacks registry. More details
-of this phase-out can be found in the [migration](#migration) section of this document.
+workflows.
+
+CNB is committed to backwards compatibility. Changes to the CNB registry will be backwards compatible, but if
+the CNB registry is eventually completely decommissioned, current versions of pack will cease to function. This RFC
+proposes a phase-out and eventual decommission of the buildpacks registry, but the existing registry _could_ exist
+indefinitely while the CNB community benefits from Artifacthub.io support. This option is listed as
+an [alternative](#indefinite-registry). More details of the proposed phase-out can be found in
+the [migration](#migration) section of this document.
 
 # How it Works
 
@@ -114,12 +119,7 @@ Because CNB already has a buildpack registry, there is a necessary migration sto
 outline the necessary work. The term "requirement" is used instead of "step" because some requirements can be done in
 parallel, while some have dependencies on other requirements.
 
-### Requirement 1 - Approval in Artifact Hub for work to proceed
-
-The [issue](https://github.com/artifacthub/hub/issues/4352) must be accepted in Artifact Hub. Subsequent work is
-outlined in the third requirement.
-
-### Requrement 2 - CNB Announcement
+### Requrement 1 - CNB Announcement
 
 We should announce our intentions to the CNB community. There will be a slow roll-out of features but this is
 ultimately a destructive change. Publishers and users will be affected. We should make this announcement so that
@@ -127,6 +127,11 @@ publishers and uers know what is coming and so that there is a reference we can 
 tooling.
 
 This announcement should be a living document that will be updated as the various requirements are satisfied.
+
+### Requirement 2 - Approval in Artifact Hub for work to proceed
+
+The [issue](https://github.com/artifacthub/hub/issues/4352) must be accepted in Artifact Hub. Subsequent work is
+outlined in the third requirement.
 
 ### Requirement 3 - Add support in Artifact Hub for component buildpacks and builders.
 
@@ -244,7 +249,7 @@ step. Instead of the CNB registry service scanning this as well, the registry se
 on calls to the ArtifactHub.io API.
 
 When this step is complete, publishers will be able to take full owership of their publishing process. The buildpacks
-registry index will continue to be read/write for 12 months, so publishers can continue to publish to the buildpacks
+registry index will continue to be read/write for 6 months, so publishers can continue to publish to the buildpacks
 registry.
 
 At this point, publishers have the option of claiming ownership of their packages and publishing to ArtifactHub.io only.
@@ -253,7 +258,7 @@ publishing process because it is calling the ArtifactHub.io API.
 
 `pack` will continue reading from the CNB registry API.
 
-At this point, publishers can publish to either the buildpack registry index or ArtifactHub.io. By the end of 12 months,
+At this point, publishers can publish to either the buildpack registry index or ArtifactHub.io. By the end of 6 months,
 publishers should only use the ArtifactHub.io method for publishing, because the buildpack registry index will become
 readonly at this point and will not accept new publishes.
 
@@ -264,20 +269,20 @@ This flag would be threaded through to all the current `pack` commands that rely
 `pack buildpack` commands. If this flag is set to `artifacthub`, `pack` will utilize ArtifactHub.io. For instance, the
 `pack buildpack register` command will call the ArtifactHub.io API.
 
-From month 0-12, the flag will default to `cnb` and users will be warned about the upcoming behavior changes.
+From month 0-6, the flag will default to `legacy` and users will be warned about the upcoming behavior changes.
 
-From month 12-18, the flag will default to `artifacthub`. On failures, users will be warned about the changes, and they
-will be able to set the flag to `cnb` for a period of time.
+From month 6-18, the flag will default to `artifacthub`. On failures, users will be warned about the changes, and they
+will be able to set the flag to `legacy` for a period of time.
 
 After month 18, the flag will be deprecated and the only behavior will be the `artifacthub` schema behavior.
 
 ### Requirement 7 - Terminate the buildpacks registry service
 
-From month 0-12, there will be only additive changes to the registry service. It will maintain full backwards
-compatibility for 12 months.
+From month 0-6, there will be only additive changes to the registry service. It will maintain full backwards
+compatibility for 6 months.
 
-From month 12-18, the registry service will be read-only. No buildpacks will be able to publish to the registry service
-after 12 months, but it will still serve `GET` requests so that `pack` does not break.
+From month 6-18, the registry service will be read-only. No buildpacks will be able to publish to the registry service
+after 6 months, but it will still serve `GET` requests so that `pack` does not break.
 
 After month 18, the registry service will be terminated. At this point, ArtifactHub.io will be the official source for
 buildpacks.
@@ -314,7 +319,7 @@ We could leave our discoverability story alone and maintain our current implemen
 
 This would require time, effort, and a new investment in architecture.
 
-### Continue to run the CNB registry indefinitely as the official source for `pack`
+### <a href="#indefinite-registry"></a> Continue to run the CNB registry indefinitely as the official source for `pack`
 
 In this alternative, we fulfil the requirements through Requirement 5. Efforts could cease after the registry indexer
 pulls sources from ArtifactHub.io. The CNB registry would continue to operate in a fully backwards-compatible manner and
