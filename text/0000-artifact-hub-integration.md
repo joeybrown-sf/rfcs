@@ -106,6 +106,38 @@ Buildpack publishers will be able to continue publishing to the buildpack regist
 will likely want to publish to ArtifactHub.io instead. Eventually, buildpack publishers will not be able to publish to
 the buildpack registry.
 
+#### Buildpack Publishing & Usage Today
+
+```mermaid
+sequenceDiagram
+    participant publisher as Buildpack <br/> Publisher
+    participant registry as 3rd Party <br/> Image Registry <br/> (i.e. Docker Hub)
+    participant index as CNB Index
+    participant indexer as CNB Registry <br/> Indexer
+    participant api as CNB Registry <br/> API
+    participant dev as Developer
+    participant app as CNB App
+
+    activate publisher
+    publisher->>registry: push buildpack artifact
+    publisher->>index: pack buildpack register
+    deactivate publisher
+    
+    note over index, indexer: some time elapses...
+    
+    activate indexer
+    indexer->>index: scan index
+    indexer->>api: write metadata
+    deactivate indexer
+
+    note over api, dev: some time elapses...
+    
+    activate dev
+    dev->>api: pack build, inspect, etc
+    dev->>app: app built
+    deactivate dev
+```
+
 # Migration
 
 [migration]: #migration
@@ -238,6 +270,65 @@ registries with URLs that point to packages in the following pattern:
 > confusion if buildpack artifacts exist in ArtifactHub.io but not the registry index, because `pack` only knows about
 > the packages defined in the index.
 
+
+#### Processes - Mirror buildpack artifacts from the buildpack [registry index](https://github.com/buildpacks/registry-index) to ArtifactHub.io
+```mermaid
+sequenceDiagram
+    box Existing Proces
+    participant publisher as Buildpack <br/> Publisher
+    participant registry as 3rd Party <br/> Image Registry <br/> (i.e. Docker Hub)
+    participant indexlegacy as CNB Index <br/> (Legacy Directory Structure)
+    participant cnbindexer as CNB Registry <br/> Indexer
+    participant cnbapi as CNB Registry <br/> API
+    participant dev as Developer
+    participant app as CNB App
+    end
+    box New Proces
+    participant githubaction as Github Action
+    participant indexah as CNB Index <br/> (Artifact Hub <br/> Directory Structure)
+    participant ahindexer as Artifacthub.io <br/> Indexer
+    participant ahapi as Artifacthub.io <br/> API
+    end
+
+    activate publisher
+    publisher->>registry: push buildpack artifact
+    publisher->>indexlegacy: pack buildpack register
+    deactivate publisher
+    
+    note over indexlegacy, cnbindexer: some time elapses...
+    
+    activate cnbindexer
+    cnbindexer->>indexlegacy: scan index
+    indexlegacy-->>cnbindexer: metadata
+    cnbindexer->>cnbapi: write metadata
+    deactivate cnbindexer
+    
+    note over cnbapi, dev: some time elapses...
+
+    activate dev
+    dev->>cnbapi: pack build, inspect, etc
+    dev->>app: app built
+    deactivate dev
+
+    note over indexlegacy: triggered at time of pack register
+    activate githubaction
+    indexlegacy->>githubaction: Trigger Github Action
+
+    githubaction->>indexlegacy: Read metadata
+    indexlegacy-->>githubaction: metadata
+    githubaction->>indexah: Write metadata
+
+    deactivate githubaction
+    
+    note over indexah, ahindexer: some time elapses...
+    
+    activate ahindexer
+    ahindexer->>indexah: scan index
+    indexah-->>ahindexer: metadata
+    ahindexer->>ahapi: Write metadata
+    deactivate ahindexer
+```
+
 ### Requirement 5 - Update the buildpacks [registry indexer](https://github.com/buildpacks/registry-api/blob/main/cmd/index-buildpacks/main.go) to use to ArtifactHub.io instead of directly from the index file structure.
 
 _The goal here is that the registry service no longer crawls the packages inside the buildpack index project. It will
@@ -262,6 +353,66 @@ At this point, publishers can publish to either the buildpack registry index or 
 publishers should only use the ArtifactHub.io method for publishing, because the buildpack registry index will become
 readonly at this point and will not accept new publishes.
 
+#### Processes - Buildpacks registry indexer uses ArtifactHub.io as data source
+```mermaid
+sequenceDiagram
+    participant publisher as Buildpack <br/> Publisher
+    participant registry as 3rd Party <br/> Image Registry <br/> (i.e. Docker Hub)
+    participant indexah as CNB Index <br/> (Artifact Hub <br/> Directory Structure)
+    participant repo as Publisher Owned <br /> Git Repository
+    participant ahindexer as Artifacthub.io <br/> Indexer
+    participant ahapi as Artifacthub.io <br/> API
+    participant cnbindexer as CNB Registry <br/> Indexer
+    participant cnbapi as CNB Registry <br/> API
+    participant dev as Developer
+    participant app as CNB App
+
+    alt publisher utilizes pack publish
+    activate publisher
+    publisher->>registry: push buildpack artifact
+    publisher->>indexah: pack buildpack register
+    end
+    deactivate publisher
+    
+    note over indexah, ahindexer: some time elapses...
+
+    activate ahindexer
+    ahindexer->>indexah: scan index
+    indexah-->>ahindexer: metadata
+    ahindexer->>ahapi: Write metadata
+    deactivate ahindexer
+
+    alt publisher has claimed repository ownership in ArtifactHub.io
+    activate publisher
+    publisher->>registry: push buildpack artifact
+    publisher->>repo: update ArtifactHub.io metadata
+    deactivate publisher
+    end
+
+    note over repo, ahindexer: some time elapses...
+
+    activate ahindexer
+    ahindexer->>repo: scan repo
+    repo-->>ahindexer: metadata
+    ahindexer->>ahapi: Write metadata
+    deactivate ahindexer
+
+    note over ahapi, cnbindexer: some time elapses...
+
+    activate cnbindexer
+    cnbindexer->>ahapi: query api
+    ahapi-->>cnbindexer: metadata
+    cnbindexer->>cnbapi: write metadata
+    deactivate cnbindexer
+    
+    note over cnbapi, dev: some time elapses...
+
+    activate dev
+    dev->>cnbapi: pack build, inspect, etc
+    dev->>app: app built
+    deactivate dev
+```
+
 ### Requirement 6 - Update `pack` to pull from ArtifactHub.io
 
 We will introduce a new flag to `pack` called `registry-schema`. The options for this flag are `cnb` and `artifacthub`.
@@ -276,6 +427,74 @@ will be able to set the flag to `legacy` for a period of time.
 
 After month 18, the flag will be deprecated and the only behavior will be the `artifacthub` schema behavior.
 
+#### Processes - Pack supports both ArtifactHub.io API and CNB Registry API 
+```mermaid
+sequenceDiagram
+    participant publisher as Buildpack <br/> Publisher
+    participant registry as 3rd Party <br/> Image Registry <br/> (i.e. Docker Hub)
+    participant indexah as CNB Index <br/> (Artifact Hub <br/> Directory Structure)
+    participant repo as Publisher Owned <br /> Git Repository
+    participant ahindexer as Artifacthub.io <br/> Indexer
+    participant ahapi as Artifacthub.io <br/> API
+    participant cnbindexer as CNB Registry <br/> Indexer
+    participant cnbapi as CNB Registry <br/> API
+    participant dev as Developer
+    participant app as CNB App
+
+    alt publisher utilizes pack publish
+    activate publisher
+    publisher->>registry: push buildpack artifact
+    publisher->>indexah: pack buildpack register
+    end
+    deactivate publisher
+    
+    note over indexah, ahindexer: some time elapses...
+
+    activate ahindexer
+    ahindexer->>indexah: scan index
+    indexah-->>ahindexer: metadata
+    ahindexer->>ahapi: Write metadata
+    deactivate ahindexer
+
+    alt publisher has claimed repository ownership in ArtifactHub.io
+    activate publisher
+    publisher->>registry: push buildpack artifact
+    publisher->>repo: update ArtifactHub.io metadata
+    deactivate publisher
+    end
+
+    note over repo, ahindexer: some time elapses...
+
+    activate ahindexer
+    ahindexer->>repo: scan repo
+    repo-->>ahindexer: metadata
+    ahindexer->>ahapi: Write metadata
+    deactivate ahindexer
+
+    note over ahapi, cnbindexer: some time elapses...
+    
+    activate cnbindexer
+    cnbindexer->>ahapi: query api
+    ahapi-->>cnbindexer: metadata
+    cnbindexer->>cnbapi: write metadata
+    deactivate cnbindexer
+    
+    note over cnbapi, dev: some time elapses...
+    
+    alt pack registry-schema=legacy
+    activate dev
+    dev->>cnbapi: pack build, inspect, etc
+    dev->>app: app built
+    deactivate dev
+    
+    else pack registry-schema=artifacthub
+    activate dev
+    dev->>ahapi: pack build, inspect, etc
+    dev->>app: app built
+    deactivate dev
+    end
+```
+
 ### Requirement 7 - Terminate the buildpacks registry service
 
 From month 0-6, there will be only additive changes to the registry service. It will maintain full backwards
@@ -286,6 +505,38 @@ after 6 months, but it will still serve `GET` requests so that `pack` does not b
 
 After month 18, the registry service will be terminated. At this point, ArtifactHub.io will be the official source for
 buildpacks.
+
+#### Processes - CNB Registry is terminated
+```mermaid
+sequenceDiagram
+    participant publisher as Buildpack <br/> Publisher
+    participant registry as 3rd Party <br/> Image Registry <br/> (i.e. Docker Hub)
+    participant repo as Publisher Owned <br /> Git Repository
+    participant ahindexer as Artifacthub.io <br/> Indexer
+    participant ahapi as Artifacthub.io <br/> API
+    participant dev as Developer
+    participant app as CNB App
+
+    activate publisher
+    publisher->>registry: push buildpack artifact
+    publisher->>repo: update ArtifactHub.io metadata
+    deactivate publisher
+
+    note over repo, ahindexer: some time elapses...
+
+    activate ahindexer
+    ahindexer->>repo: scan repo
+    repo-->>ahindexer: metadata
+    ahindexer->>ahapi: Write metadata
+    deactivate ahindexer
+
+    note over ahapi, dev: some time elapses...
+    
+    activate dev
+    dev->>ahapi: pack build, inspect, etc
+    dev->>app: app built
+    deactivate dev
+```
 
 # Drawbacks
 
