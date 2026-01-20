@@ -293,4 +293,4 @@ Here is what I have claimed:
 
 To build this list of organizations and namespaces I claimed in ArtifactHub.io, I checked out some cnb heruistics gleaned from the CNB Registry to try to snag popular buildpack namespaces and namespaces for which I know there are references and maintainers github handles that I recognized. I'm sorry if I missed your buildpack. Please feel free to let me know and I'm happy to claim it on your behalf until you have time to claim it yourself. I didn't want to claim all buildpacks in the CNB Registry because this is an opprotunity for us to clean stuff up and squatting all namespaces in ArtifactHub.io feels bad.
 
-I would like to pass off ownership of these organizations and repository names in ArtifactHub.io AS SOON AS POSSIBLE. The custody of the organization and repository names is critical for maintaining trust in buildpacks.
+I would like to pass off ownership of these organizations and repository names in ArtifactHub.io as soon as possible. The custody of the organization and repository names is critical for maintaining trust in buildpacks.
